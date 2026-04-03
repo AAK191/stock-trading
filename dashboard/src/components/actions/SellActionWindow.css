@@ -1,0 +1,130 @@
+/* Overlay */
+#sell-window::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: -1;
+}
+
+/* Container */
+.container {
+  width: 420px;
+  background: #ffffff;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  z-index: 1000;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  animation: popup 0.25s ease forwards;
+}
+
+/* Animation */
+@keyframes popup {
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #ff4d4d, #ff1a1a);
+  color: white;
+  padding: 14px 18px;
+  border-radius: 12px 12px 0 0;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Body */
+.regular-order {
+  padding: 22px;
+}
+
+/* Inputs */
+.inputs {
+  display: flex;
+  gap: 12px;
+}
+
+/* Fieldset */
+.inputs fieldset {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 6px;
+  transition: all 0.2s ease;
+}
+
+.inputs fieldset:focus-within {
+  border-color: #ff4d4d;
+  box-shadow: 0 0 6px rgba(255, 77, 77, 0.3);
+}
+
+/* Legend */
+.inputs legend {
+  font-size: 0.7rem;
+  color: #888;
+}
+
+/* Input */
+.inputs input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 1.1rem;
+  padding: 6px;
+}
+
+/* Buttons section */
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  border-top: 1px solid #eee;
+}
+
+/* Margin text */
+.buttons span {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+/* Buttons */
+.btn {
+  padding: 9px 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+/* Sell button */
+.btn-blue {
+  background: linear-gradient(135deg, #ff4d4d, #ff1a1a);
+  color: white;
+}
+
+.btn-blue:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(255, 0, 0, 0.4);
+}
+
+/* Cancel */
+.btn-grey {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.btn-grey:hover {
+  background: #d6d6d6;
+}
