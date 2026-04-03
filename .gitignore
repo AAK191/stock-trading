@@ -22,4 +22,5 @@ Thumbs.db
 .idea/
 
 # coverage
-coverage/
+coverage/node_modules/
+.env
