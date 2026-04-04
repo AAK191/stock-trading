@@ -2,22 +2,16 @@ import React from "react";
 
 import axios from "axios";
 import GeneralContext from "../context/GeneralContext";
-import { useFinnhubSocket } from "./hooks/useFinnhubSocket";
+import { useLivePrices } from "./hooks/useLivePrices";
 import { useEffect, useState, useContext, useCallback } from "react";
 
 const Positions = () => {
   const [positions, setPositions] = useState([]);
-  const [livePrices, setLivePrices] = useState({});
   const { refreshFlag } = useContext(GeneralContext);
 
-  const positionSymbols = positions.map((p) => `NSE:${p.name}`);
+  const stockNames = positions.map((p) => p.name);
+  const { prices: livePrices, loading } = useLivePrices(stockNames, 30000);
 
-  useFinnhubSocket(
-    positionSymbols,
-    useCallback((updates) => {
-      setLivePrices((prev) => ({ ...prev, ...updates }));
-    }, [])
-  );
 
 
   useEffect(() => {
@@ -28,16 +22,21 @@ const Positions = () => {
   }, [refreshFlag]);
 
   const totalPnl = positions.reduce((sum, stock) => {
-    const lp = livePrices[`NSE:${stock.name}`] ?? stock.price;
-    const safeLp = typeof lp === "number" ? lp : stock.price;
-    return sum + (safeLp - stock.avg) * stock.qty;
+    const lp = livePrices[stock.name] ?? stock.price ?? 0;
+    return sum + (lp - (stock.avg ?? 0)) * stock.qty;
   }, 0);
 
   const pnlClass = totalPnl >= 0 ? "profit" : "loss";
 
   return (
     <>
-      <h3 className="title">Positions ({positions.length})</h3>
+      <h3 className="title">Positions ({positions.length})
+        {loading && (
+          <span style={{ fontSize: "12px", color: "#888", marginLeft: "8px" }}>
+            loading prices…
+          </span>
+        )}
+      </h3>
 
       <div className="order-table">
         <table>
@@ -55,12 +54,9 @@ const Positions = () => {
 
           <tbody>
             {positions.map((stock, index) => {
-              const livePrice = livePrices[`NSE:${stock.name}`] ?? stock.price;
-              const safeLivePrice =
-                typeof livePrice === "number" ? livePrice : stock.price;
-
-              const avgCost = typeof stock.avg === "number" ? stock.avg : 0;
-              const pnl = (safeLivePrice - avgCost) * stock.qty;
+              const livePrice = livePrices[stock.name] ?? stock.price ?? 0;
+              const avgCost = stock.avg ?? 0;
+              const pnl = (livePrice - avgCost) * stock.qty;
               const isProfit = pnl >= 0;
               const profClass = isProfit ? "profit" : "loss";
               const dayClass = stock.isLoss ? "loss" : "profit";
@@ -71,7 +67,11 @@ const Positions = () => {
                   <td>{stock.name}</td>
                   <td>{stock.qty}</td>
                   <td>{avgCost.toFixed(2)}</td>
-                  <td>{safeLivePrice.toFixed(2)}</td>
+                  <td>
+                    <span style={{ color: livePrices[stock.name] ? "#4caf50" : "inherit" }}>
+                      {livePrice.toFixed(2)}
+                    </span>
+                  </td>
                   <td className={profClass}>
                     {pnl.toFixed(2)}
                   </td>
@@ -100,7 +100,7 @@ const Positions = () => {
           </div>
         </div>
       )}
-      
+
     </>
   );
 };

@@ -4,19 +4,16 @@ import axios from "axios";
 import { useEffect, useState, useContext, useCallback } from "react";
 import GeneralContext from "../context/GeneralContext";
 import { VerticalGraph } from "./Graphs/VerticalGraph";
-import { useFinnhubSocket } from "./hooks/useFinnhubSocket";
+import { useLivePrices } from "./hooks/useLivePrices";
 
 
 const Holdings = () => {
   const [allHoldings, setHoldings] = useState([]);
   const { refreshFlag } = useContext(GeneralContext);
-  const [livePrices, setLivePrices] = useState({});
+  
+  const stockNames = allHoldings.map((h) => `NSE:${h.name}`);
 
-  const holdingSymbols = allHoldings.map((h) => `NSE:${h.name}`);
-
-  useFinnhubSocket(holdingSymbols, useCallback((updates) => {
-    setLivePrices((prev) => ({ ...prev, ...updates }));
-  }, []));
+  const { prices: livePrices, loading } = useLivePrices(stockNames, 30000);
 
   useEffect(() => {
     axios.get("http://localhost:3002/allHoldings").then((res) => {
@@ -25,10 +22,8 @@ const Holdings = () => {
     });
   }, [refreshFlag]);
 
-  const labels = allHoldings.map((s) => s.name);
-
   const data = {
-    labels,
+    labels: allHoldings.map((s) => s.name),
     datasets: [
       {
         label: "Stock Price",
@@ -45,7 +40,7 @@ const Holdings = () => {
   );
 
   const currentValue = allHoldings.reduce((sum, s) => {
-    const lp = livePrices[`NSE:${s.name}`] ?? s.price;
+    const lp = livePrices[s.name] ?? s.price ?? 0;
     return sum + lp * s.qty;
   }, 0);
 
@@ -56,7 +51,13 @@ const Holdings = () => {
 
   return (
     <>
-      <h3 className="title">Holdings ({allHoldings.length})</h3>
+      <h3 className="title">Holdings ({allHoldings.length})
+            {loading && (
+          <span style={{ fontSize: "12px", color: "#888", marginLeft: "8px" }}>
+            loading prices…
+          </span>
+        )}
+      </h3>
 
       <div className="order-table">
         <table>
@@ -76,12 +77,9 @@ const Holdings = () => {
           <tbody>
             {allHoldings.map((stock, index) => {
 
-              const livePrice = livePrices[`NSE:${stock.name}`] ?? stock.price;
-              const safeLivePrice =
-                typeof livePrice === "number" ? livePrice : stock.price;
- 
-              const avgCost = typeof stock.avg === "number" ? stock.avg : 0;
-              const currValue = safeLivePrice * stock.qty;
+              const livePrice = livePrices[stock.name] ?? stock.price ?? 0;
+              const avgCost = stock.avg ?? 0;
+              const currValue = livePrice * stock.qty;
               const pnl = currValue - avgCost * stock.qty;
               const isProfit = pnl >= 0;
               const profClass = isProfit ? "profit" : "loss";
@@ -92,7 +90,11 @@ const Holdings = () => {
                   <td>{stock.name}</td>
                   <td>{stock.qty}</td>
                   <td>{avgCost.toFixed(2)}</td>
-                  <td>{safeLivePrice.toFixed(2)}</td>
+                  <td>
+                    <span style={{ color: livePrices[stock.name] ? "#4caf50" : "inherit" }}>
+                      {livePrice.toFixed(2)}
+                    </span>
+                  </td>
                   <td>{currValue.toFixed(2)}</td>
                   <td className={profClass}>
                     {pnl.toFixed(2)}
